@@ -1,0 +1,6 @@
+{
+  "name": "Placement Pilot",
+  "description": "An interactive student placement preparation ecosystem containing 45+ company guides, 19 modular progress roadmaps, and an applications tracker.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

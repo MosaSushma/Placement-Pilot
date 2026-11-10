@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "user": {
+      "title": "User Profile",
+      "description": "User profile metadata and academic details.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "college": { "type": "string" },
+        "degree": { "type": "string" },
+        "skills": { "type": "array" },
+        "targetSalary": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "name", "email", "createdAt", "updatedAt"]
+    },
+    "application": {
+      "title": "Practice Application",
+      "description": "A student's practice job application status and notes.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "companyId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "appliedAt": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending", "Interview", "Offer", "Rejected"] },
+        "roundsCleared": { "type": "number" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "userId", "companyId", "companyName", "appliedAt", "status", "roundsCleared"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "user",
+      "description": "User profiles stored by uid."
+    },
+    "applications/{applicationId}": {
+      "schema": "application",
+      "description": "Simulated practice applications keyed by application ID."
+    }
+  }
+}

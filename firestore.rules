@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for User Profile
+    function isValidUser(data) {
+      return data.uid == request.auth.uid
+          && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+          && data.email is string && data.email.size() > 0 && data.email.size() <= 100
+          && (data.college is string && data.college.size() <= 150)
+          && (data.degree is string && data.degree.size() <= 150)
+          && (data.skills is list && data.skills.size() <= 30)
+          && (data.targetSalary is number && data.targetSalary >= 0);
+    }
+
+    // Validation for Applications
+    function isValidApplication(data) {
+      return data.id is string && data.id.size() <= 128
+          && data.userId == request.auth.uid
+          && data.companyId is string && data.companyId.size() <= 100
+          && data.companyName is string && data.companyName.size() <= 100
+          && data.appliedAt is string && data.appliedAt.size() <= 100
+          && data.status is string && (data.status == 'Pending' || data.status == 'Interview' || data.status == 'Offer' || data.status == 'Rejected')
+          && data.roundsCleared is int && data.roundsCleared >= 0 && data.roundsCleared <= 10
+          && data.notes is string && data.notes.size() <= 1000;
+    }
+
+    // User Collection Rules
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUser(incoming());
+      allow delete: if false;
+    }
+
+    // Applications Collection Rules
+    match /applications/{applicationId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+                    && isValidId(applicationId)
+                    && incoming().userId == request.auth.uid
+                    && isValidApplication(incoming());
+      allow update: if isSignedIn()
+                    && isValidId(applicationId)
+                    && existing().userId == request.auth.uid
+                    && incoming().userId == request.auth.uid
+                    && isValidApplication(incoming())
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'roundsCleared', 'notes']);
+      allow delete: if isSignedIn()
+                    && existing().userId == request.auth.uid;
+    }
+  }
+}
